@@ -12,6 +12,7 @@
 - [ ] **GitHub Personal Access Token** (`ghp_...`) 실시간 감지
 - [ ] **Anthropic Claude API Key** (`sk-ant-...`) 실시간 감지
 - [ ] 입력/붙여넣기 이벤트 감지 및 경고 모달 팝업 구현
+- [ ] **다국어 지원(i18n)**: Chrome i18n API 기반 한국어(`ko`) 및 영어(`en`) 경고 문구 자동 전환
 
 ## 📅 프로젝트 로드맵
 - **1일차**: 아이디어 정의 및 v1 스코프 확정 (완료)
