@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "SecretKey Blocker",
+  "version": "1.0.0",
+  "description": "웹 입력창 및 AI 챗봇에서 API 키 유출을 실시간으로 차단합니다.",
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
