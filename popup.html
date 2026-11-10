@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 230px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #1f2937;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #f9fafb;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+    .label-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+    /* iOS 스타일 슬라이더 토글 스위치 */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #d1d5db;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider {
+      background-color: #10b981; /* 세련된 에메랄드 그린 */
+    }
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+    .status-badge {
+      font-size: 11px;
+      margin-top: 12px;
+      text-align: center;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span>🛡️</span> SecretKey Blocker
+  </div>
+  <div class="switch-container">
+    <span class="label-text">실시간 감지</span>
+    <label class="switch">
+      <input type="checkbox" id="toggleState" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="status-badge" id="statusText">🟢 실시간 감지 작동 중</div>
+  <script src="popup.js"></script>
+</body>
+</html>
