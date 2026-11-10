@@ -1,27 +1,39 @@
 const toggle = document.getElementById("toggleState");
-const statusText = document.getElementById("statusText");
+const alertBox = document.getElementById("alertBox");
 
-// ON/OFF 상태에 따라 하단 텍스트 UI 업데이트 함수
-function updateStatusUI(isEnabled) {
-  if (isEnabled) {
-    statusText.textContent = "🟢 실시간 감지 작동 중";
-    statusText.style.color = "#059669";
-  } else {
-    statusText.textContent = "⚪ 감지 일시 중단됨";
-    statusText.style.color = "#6b7280";
-  }
+function checkCurrentTabStatus() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const activeTab = tabs[0];
+    if (!activeTab) return;
+
+    const tabStorageKey = `tab_${activeTab.id}`;
+    chrome.storage.local.get([tabStorageKey, "isEnabled"], (result) => {
+      const isEnabled = result.isEnabled !== false;
+      toggle.checked = isEnabled;
+
+      if (!isEnabled) {
+        alertBox.className = "alert-box safe";
+        alertBox.innerHTML = "⚪ 실시간 감지가 중지되었습니다.";
+        return;
+      }
+
+      const info = result[tabStorageKey];
+      if (info && info.hasKey) {
+        alertBox.className = "alert-box danger";
+        alertBox.innerHTML = `⚠️ <b>${info.keyName}</b>가 감지되었습니다!<br>삭제 후 전송하세요.`;
+      } else {
+        alertBox.className = "alert-box safe";
+        alertBox.innerHTML = "✅ 현재 감지된 API 키가 없습니다.";
+      }
+    });
+  });
 }
 
-// 1. 현재 저장된 ON/OFF 상태 불러오기
-chrome.storage.local.get(["isEnabled"], (result) => {
-  const isEnabled = result.isEnabled !== false;
-  toggle.checked = isEnabled;
-  updateStatusUI(isEnabled);
-});
-
-// 2. 사용자가 스위치를 토글할 때
 toggle.addEventListener("change", () => {
   const isEnabled = toggle.checked;
-  chrome.storage.local.set({ isEnabled: isEnabled });
-  updateStatusUI(isEnabled);
+  chrome.storage.local.set({ isEnabled: isEnabled }, () => {
+    checkCurrentTabStatus();
+  });
 });
+
+document.addEventListener("DOMContentLoaded", checkCurrentTabStatus);

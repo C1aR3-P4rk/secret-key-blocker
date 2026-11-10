@@ -1,4 +1,4 @@
-// SecretKey Blocker - Content Script
+// SecretKey Blocker - Content Script (v1.5 Update)
 
 console.log("🛡️ SecretKey Blocker가 활성화되었습니다.");
 
@@ -10,36 +10,73 @@ const API_KEY_PATTERNS = [
 ];
 
 function checkSensitivetext(text) {
-  if (!text) return;
+  if (typeof text !== "string") text = "";
 
-  // chrome.storage에서 현재 ON/OFF 활성화 상태 점검
   chrome.storage.local.get(["isEnabled"], (result) => {
-    // 사용자가 OFF(false)로 설정한 경우 경고를 발생시키지 않음
-    if (result.isEnabled === false) return;
+    // ON/OFF 스위치가 꺼져있으면 배지 해제
+    if (result.isEnabled === false) {
+      chrome.runtime.sendMessage({ action: "KEY_CLEARED" });
+      return;
+    }
 
-    for (const pattern of API_KEY_PATTERNS) {
-      if (pattern.regex.test(text)) {
-        console.warn(`⚠️ [SecretKey Blocker] ${pattern.name} 패턴이 감지되었습니다!`);
-        
-        alert(
-          `⚠️ [SecretKey Blocker 보안 경고]\n\n` +
-          `입력창에서 [${pattern.name}] 패턴이 감지되었습니다!\n` +
-          `실수로 외부에 유출되지 않도록 API 키를 삭제한 뒤 전송하세요.`
-        );
-        break;
+    let detectedPattern = null;
+    if (text.trim().length > 0) {
+      for (const pattern of API_KEY_PATTERNS) {
+        if (pattern.regex.test(text)) {
+          detectedPattern = pattern.name;
+          break;
+        }
       }
+    }
+
+    if (detectedPattern) {
+      console.warn(`⚠️ [SecretKey Blocker] ${detectedPattern} 감지됨!`);
+      chrome.runtime.sendMessage({ action: "KEY_DETECTED", keyName: detectedPattern });
+    } else {
+      // 텍스트에서 API 키가 완전히 지워졌으면 배지 즉시 해제
+      chrome.runtime.sendMessage({ action: "KEY_CLEARED" });
     }
   });
 }
 
-// 이벤트 리스너 (동일)
+// 현재 활성화된 입력창의 전체 텍스트 추출 헬퍼 함수
+function checkCurrentActiveInput() {
+  // 에디터가 DOM에서 글자를 지울 때까지 10ms 대기 후 텍스트 추출
+  setTimeout(() => {
+    const el = document.activeElement;
+    if (!el) return;
+
+    // contenteditable 최상위 컨테이너 또는 input/textarea 추출
+    const container = el.closest('[contenteditable="true"]') || el;
+    const text = container.value || container.textContent || container.innerText || "";
+    checkSensitivetext(text);
+  }, 10);
+}
+
+// 1. 붙여넣기(Paste) 이벤트
 document.addEventListener("paste", (event) => {
   const pastedText = (event.clipboardData || window.clipboardData)?.getData("text");
-  if (pastedText) checkSensitivetext(pastedText);
+  if (pastedText) {
+    checkSensitivetext(pastedText);
+  }
+  checkCurrentActiveInput();
 }, true);
 
-document.addEventListener("input", (event) => {
-  const target = event.target;
-  const text = target.value || target.textContent || target.innerText || "";
-  checkSensitivetext(text);
+// 2. 잘라내기(Cut) 이벤트
+document.addEventListener("cut", checkCurrentActiveInput, true);
+
+// 3. 타이핑 및 입력(Input) 이벤트
+document.addEventListener("input", checkCurrentActiveInput, true);
+
+// 4. Backspace & Delete 키 누름 감지 (keydown + keyup 모두 추적)
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Backspace" || event.key === "Delete") {
+    checkCurrentActiveInput();
+  }
+}, true);
+
+document.addEventListener("keyup", (event) => {
+  if (event.key === "Backspace" || event.key === "Delete") {
+    checkCurrentActiveInput();
+  }
 }, true);
